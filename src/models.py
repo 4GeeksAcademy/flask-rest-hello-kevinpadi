@@ -62,7 +62,6 @@ class Planet(db.Model):
             "surface_water": self.surface_water,
             "population": self.population,
             "like": self.like,
-            "favorite": self.favorite,
         }
 
 class Vehicle(db.Model):
@@ -98,7 +97,6 @@ class Vehicle(db.Model):
             "consumables": self.consumables,
             "vehicle_class": self.vehicle_class,
             "like": self.like,
-            "favorite": self.favorite
         }
 
 class User(db.Model):
@@ -146,5 +144,4 @@ class Character(db.Model):
             "birth_year": self.birth_year,
             "gender": self.gender,
             "like": self.like,
-            "favorite": self.favorite
         }

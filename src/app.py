@@ -75,7 +75,9 @@ def get_planets():
             "msg": "Ok",
             "results": results
         }
-        return jsonify(response_body), 200
+        if results_query:
+            return jsonify(response_body), 200
+        return jsonify({"msg": "No hay planetas"}), 404
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
@@ -84,13 +86,15 @@ def get_planets():
 def get_planet(id):
     try:
         results_query = Planet.query.filter_by(id=id).first()
-        response_body = {
-            "msg": "Ok",
-            "results": results_query.serialize()
-        }
-        return jsonify(response_body), 200
+        if results_query:
+            response_body = {
+                "msg": "Ok",
+                "results": results_query.serialize()
+            }
+            return jsonify(response_body), 200
+        return jsonify({"msg": "No existe este planeta"}), 404
     except Exception as e:
-        return jsonify({"msg": str(e)}), 500
+            return jsonify({"msg": str(e)}), 500
 
 @app.route('/user', methods=['POST'])
 def create_user():
@@ -115,11 +119,14 @@ def get_characters():
     try:
         results_query = Character.query.all()
         results = list(map(lambda item: item.serialize(), results_query))
+        print(results)
         response_body = {
             "msg": "Ok",
             "results": results
         }
-        return jsonify(response_body), 200
+        if results_query:
+            return jsonify(response_body), 200
+        return jsonify({"msg": "No existen personajes"}), 404
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
@@ -128,11 +135,13 @@ def get_characters():
 def get_character(id):
     try:
         results_query = Character.query.filter_by(id=id).first()
-        response_body = {
-            "msg": "Ok",
-            "results": results_query.serialize()
-        }
-        return jsonify(response_body), 200
+        if results_query: 
+            response_body = {
+                "msg": "Ok",
+                "results": results_query.serialize()
+            }
+            return jsonify(response_body), 200
+        return jsonify({"msg": "Personaje no encontrado"}), 404
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
@@ -156,12 +165,21 @@ def get_favorites(id):
 @app.route('/users/<int:user_id>/favorites/planet/<int:planet_id>', methods=['POST'])
 def create_favorite_planet(user_id, planet_id):
     try:
+        user_exists = User.query.filter_by(id=user_id).first()
+        if not user_exists:
+            return jsonify({"msg": "El usuario no existe"}), 400
+        planet_exists = Planet.query.filter_by(id=planet_id).first()
+        if not planet_exists:
+            return jsonify({"msg": "El planeta no existe"}), 400
+
         existing_favorite = Favorite.query.filter_by(user_id=user_id, planet_id=planet_id).first()
         if existing_favorite:
             return jsonify({"msg": "El favorito ya existe"}), 400
+
         favorite_created = Favorite(user_id=user_id, planet_id=planet_id)
         db.session.add(favorite_created)
         db.session.commit()
+
         response_body = {
             "msg": "Favorito creado",
             "favorito": favorite_created.serialize()
@@ -170,16 +188,24 @@ def create_favorite_planet(user_id, planet_id):
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
-#AGREGAR CHARACTER FAVORITO
 @app.route('/users/<int:user_id>/favorites/character/<int:character_id>', methods=['POST'])
 def create_favorite_character(user_id, character_id):
     try:
+        user_exists = User.query.filter_by(id=user_id).first()
+        if not user_exists:
+            return jsonify({"msg": "El usuario no existe"}), 400
+        character_exists = Character.query.filter_by(id=character_id).first()
+        if not character_exists:
+            return jsonify({"msg": "El character no existe"}), 400
+
         existing_favorite = Favorite.query.filter_by(user_id=user_id, character_id=character_id).first()
         if existing_favorite:
             return jsonify({"msg": "El favorito ya existe"}), 400
+
         favorite_created = Favorite(user_id=user_id, character_id=character_id)
         db.session.add(favorite_created)
         db.session.commit()
+
         response_body = {
             "msg": "Favorito creado",
             "favorito": favorite_created.serialize()
@@ -192,12 +218,18 @@ def create_favorite_character(user_id, character_id):
 @app.route('/users/<int:user_id>/favorites/planet/<int:planet_id>', methods=['DELETE'])
 def delete_favorite_planet(user_id, planet_id):
     try:
+        user_exists = User.query.filter_by(id=user_id).first()
+        if not user_exists:
+            return jsonify({"msg": "El usuario no existe"}), 400
+        planet_exists = Planet.query.filter_by(id=planet_id).first()
+        if not planet_exists:
+            return jsonify({"msg": "El planeta no existe"}), 400
         existing_favorite = Favorite.query.filter_by(user_id=user_id, planet_id=planet_id).first()
         if existing_favorite:
             db.session.delete(existing_favorite)
             db.session.commit()
             return jsonify({"msg": "El favorito fue eliminado"}), 200
-        return jsonify({"msg": "No se pudo eliminar"}), 400
+        return jsonify({"msg": "No existe ese favorito, no se pudo eliminar"}), 400
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
@@ -205,12 +237,18 @@ def delete_favorite_planet(user_id, planet_id):
 @app.route('/users/<int:user_id>/favorites/character/<int:character_id>', methods=['DELETE'])
 def delete_favorite_character(user_id, character_id):
     try:
+        user_exists = User.query.filter_by(id=user_id).first()
+        if not user_exists:
+            return jsonify({"msg": "El usuario no existe"}), 400
+        character_exists = Character.query.filter_by(id=character_id).first()
+        if not character_exists:
+            return jsonify({"msg": "El character no existe"}), 400
         existing_favorite = Favorite.query.filter_by(user_id=user_id, character_id=character_id).first()
         if existing_favorite:
             db.session.delete(existing_favorite)
             db.session.commit()
             return jsonify({"msg": "El favorito fue eliminado"}), 200
-        return jsonify({"msg": "No se pudo eliminar"}), 400
+        return jsonify({"msg": "Ese favorito no existe, no se pudo eliminar"}), 400
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
 
